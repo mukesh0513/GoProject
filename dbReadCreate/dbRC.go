@@ -2,9 +2,9 @@ package dbReadCreate
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
@@ -37,14 +37,16 @@ func UploadData(user []map[string]interface{}) {
 	for _, result := range user {
 		allDetails := result["details"].(map[string]interface{})
 
-		var str []string
-		for _, result2 := range allDetails {
-			str = append(str, result2.(string))
-		}
-		var stri = strings.Join(str, " *** ")
+		jsonString, err := json.Marshal(allDetails)
+		CheckErr(err)
+		// var str []string
+		// for _, result2 := range allDetails {
+		// 	str = append(str, result2.(string))
+		// }
+		// var stri = strings.Join(str, " *** ")
 
 		insert, err := db.Query("INSERT INTO" + " " + TbName + "(name, email, phone, details) " +
-			"VALUES( '" + result["name"].(string) + "', '" + result["email"].(string) + "', '" + result["phone"].(string) + "', '" + stri + "' )")
+			"VALUES( '" + result["name"].(string) + "', '" + result["email"].(string) + "', '" + result["phone"].(string) + "', '" + string(jsonString) + "' )")
 
 		CheckErr(err)
 		defer insert.Close()
@@ -122,16 +124,16 @@ func authData(w http.ResponseWriter, retrieve *sql.Rows, userType string) {
 
 			CheckErr(err)
 			if userType == "user" {
-				fmt.Fprintf(w, "name:\t"+name)
-				fmt.Fprintf(w, "\t\temail:\t"+"xxxxxxxxxxxxxx")
-				fmt.Fprintf(w, "\t\tphone:\t"+"xxxxxxxxxxxxxx")
-				fmt.Fprintf(w, "\t\tdetail1:\t"+details)
+				fmt.Fprintf(w, "name : "+name)
+				fmt.Fprintf(w, "\temail : "+"xxxxxxxxxxxxxx")
+				fmt.Fprintf(w, "\t\tphone : "+"xxxxxxxxxxxxxx")
+				fmt.Fprintf(w, "\t\tdetail1 : "+details)
 				fmt.Fprintf(w, "\n")
 			} else {
-				fmt.Fprintf(w, "name:\t"+name)
-				fmt.Fprintf(w, "\t\temail:\t"+email)
-				fmt.Fprintf(w, "\t\tphone:\t"+phone)
-				fmt.Fprintf(w, "\t\tdetail1:\t"+details)
+				fmt.Fprintf(w, "name : "+name)
+				fmt.Fprintf(w, "\temail : "+email)
+				fmt.Fprintf(w, "\t\tphone : "+phone)
+				fmt.Fprintf(w, "\t\tdetail1 : "+details)
 				fmt.Fprintf(w, "\n")
 			}
 
