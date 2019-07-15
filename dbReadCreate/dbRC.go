@@ -1,10 +1,10 @@
 package dbReadCreate
 
 import (
-	. "GoProject/jsonStruct"
 	"database/sql"
 	"fmt"
 	"net/http"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
@@ -13,7 +13,7 @@ import (
 var dbDriver = "mysql"
 var dbUser = "root"
 var dbPass = "root"
-var dbName = "firstgodb"
+var dbName = "firstgodbNEW"
 var TbName = "logGenerate"
 
 func DbConn() (db *sql.DB) {
@@ -30,14 +30,21 @@ func CheckErr(err error) {
 	}
 }
 
-func UploadData(user []Users) {
+func UploadData(user []map[string]interface{}) {
 
 	db := DbConn()
-	for i := 0; i < len(user); i++ {
 
-		insert, err := db.Query("INSERT INTO" + " " + TbName + "(name, email, phone, detail1, detail2) " +
-			"VALUES( '" + user[i].Name + "', '" + user[i].Email + "', '" + user[i].Phone + "', '" + user[i].Detail1 + "', '" +
-			user[i].Detail2 + "' )")
+	for _, result := range user {
+		allDetails := result["details"].(map[string]interface{})
+
+		var str []string
+		for _, result2 := range allDetails {
+			str = append(str, result2.(string))
+		}
+		var stri = strings.Join(str, " *** ")
+
+		insert, err := db.Query("INSERT INTO" + " " + TbName + "(name, email, phone, details) " +
+			"VALUES( '" + result["name"].(string) + "', '" + result["email"].(string) + "', '" + result["phone"].(string) + "', '" + stri + "' )")
 
 		CheckErr(err)
 		defer insert.Close()
@@ -110,26 +117,21 @@ func authData(w http.ResponseWriter, retrieve *sql.Rows, userType string) {
 			var name string
 			var email string
 			var phone string
-			var detail1 string
-			var detail2 string
-			err := retrieve.Scan(&uid, &name, &email, &phone, &detail1, &detail2)
+			var details string
+			err := retrieve.Scan(&uid, &name, &email, &phone, &details)
 
 			CheckErr(err)
 			if userType == "user" {
-				fmt.Fprintf(w, "inside user")
 				fmt.Fprintf(w, "name:\t"+name)
 				fmt.Fprintf(w, "\t\temail:\t"+"xxxxxxxxxxxxxx")
 				fmt.Fprintf(w, "\t\tphone:\t"+"xxxxxxxxxxxxxx")
-				fmt.Fprintf(w, "\t\tdetail1:\t"+detail1)
-				fmt.Fprintf(w, "\t\tdetail2:\t"+detail2)
+				fmt.Fprintf(w, "\t\tdetail1:\t"+details)
 				fmt.Fprintf(w, "\n")
 			} else {
-				fmt.Fprintf(w, "inside admin")
 				fmt.Fprintf(w, "name:\t"+name)
 				fmt.Fprintf(w, "\t\temail:\t"+email)
 				fmt.Fprintf(w, "\t\tphone:\t"+phone)
-				fmt.Fprintf(w, "\t\tdetail1:\t"+detail1)
-				fmt.Fprintf(w, "\t\tdetail2:\t"+detail2)
+				fmt.Fprintf(w, "\t\tdetail1:\t"+details)
 				fmt.Fprintf(w, "\n")
 			}
 
