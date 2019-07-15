@@ -39,11 +39,6 @@ func UploadData(user []map[string]interface{}) {
 
 		jsonString, err := json.Marshal(allDetails)
 		CheckErr(err)
-		// var str []string
-		// for _, result2 := range allDetails {
-		// 	str = append(str, result2.(string))
-		// }
-		// var stri = strings.Join(str, " *** ")
 
 		insert, err := db.Query("INSERT INTO" + " " + TbName + "(name, email, phone, details) " +
 			"VALUES( '" + result["name"].(string) + "', '" + result["email"].(string) + "', '" + result["phone"].(string) + "', '" + string(jsonString) + "' )")
