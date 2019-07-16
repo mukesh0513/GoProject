@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
@@ -33,19 +34,32 @@ func CheckErr(err error) {
 func UploadData(user []map[string]interface{}) {
 
 	db := DbConn()
+	numGoRoutines := len(user)
+	var wg sync.WaitGroup
 
-	for _, result := range user {
-		allDetails := result["details"].(map[string]interface{})
+	for num := 0; num < numGoRoutines; num++ {
+		wg.Add(1)
+		go func(num int) {
 
-		jsonString, err := json.Marshal(allDetails)
-		CheckErr(err)
+			result := user[num : num+1][0]
+			allDetails := result["details"].(map[string]interface{})
 
-		insert, err := db.Query("INSERT INTO" + " " + TbName + "(name, email, phone, details) " +
-			"VALUES( '" + result["name"].(string) + "', '" + result["email"].(string) + "', '" + result["phone"].(string) + "', '" + string(jsonString) + "' )")
+			jsonString, err := json.Marshal(allDetails)
+			CheckErr(err)
 
-		CheckErr(err)
-		defer insert.Close()
+			insert, err := db.Query("INSERT INTO" + " " + TbName + "(name, email, phone, details) " +
+				"VALUES( '" + result["name"].(string) + "', '" + result["email"].(string) + "', '" + result["phone"].(string) + "', '" + string(jsonString) + "' )")
+
+			CheckErr(err)
+
+			defer wg.Done()
+			defer insert.Close()
+
+		}(num)
+
 	}
+	wg.Wait()
+
 }
 
 func PersonData(w http.ResponseWriter, r *http.Request) {
