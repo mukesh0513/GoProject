@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -16,6 +17,10 @@ var dbUser = "root"
 var dbPass = "root"
 var dbName = "firstgodbNEW"
 var TbName = "logGenerate"
+var startNumEncode = 2
+var endNumEncode = 2
+var startEmEncode = 4
+var endEmEncode = 10
 
 func DbConn() (db *sql.DB) {
 	db, err := sql.Open(dbDriver, dbUser+":"+dbPass+"@/"+dbName)
@@ -133,9 +138,16 @@ func authData(w http.ResponseWriter, retrieve *sql.Rows, userType string) {
 
 			CheckErr(err)
 			if userType == "user" {
+
+				startPhone := phone[:startNumEncode]
+				endPhone := phone[len(phone)-endNumEncode:]
+
+				startEmail := email[:startEmEncode]
+				endEmail := email[len(email)-endEmEncode:]
+
 				fmt.Fprintf(w, "name : "+name)
-				fmt.Fprintf(w, "\temail : "+"xxxxxxxxxxxxxx")
-				fmt.Fprintf(w, "\t\tphone : "+"xxxxxxxxxxxxxx")
+				fmt.Fprintf(w, "\temail : "+startEmail+strings.Repeat("x", len(email)-startNumEncode-endNumEncode)+endEmail)
+				fmt.Fprintf(w, "\t\tphone : "+startPhone+strings.Repeat("x", len(phone)-startNumEncode-endNumEncode)+endPhone)
 				fmt.Fprintf(w, "\t\tdetail1 : "+details)
 				fmt.Fprintf(w, "\n")
 			} else {
